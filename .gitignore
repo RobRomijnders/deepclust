@@ -1,0 +1,7 @@
+/data
+*.npy
+*.pyc
+*.p
+
+/play_frob_norm.py
+/start.py
