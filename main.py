@@ -13,6 +13,12 @@ from model import Model
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import os.path
+import socket
+
+if 'rob-laptop' in socket.gethostname():
+  datadirec = '/home/rob/Dropbox/ml_projects/deepclust/data/saved/'
+elif 'rob-com' in socket.gethostname():
+  datadirec = '/home/rob/Documents/deepclust/data/saved/'
 
 
 
@@ -33,7 +39,6 @@ plot_every = 20		# How often you want terminal output?
 
 
 """Load data"""
-datadirec = '/home/rob/Dropbox/ml_projects/deepclust/data/saved/'
 
 if os.path.isdir(datadirec):
   D = {}

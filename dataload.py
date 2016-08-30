@@ -7,7 +7,6 @@ Created on Mon Aug 29 20:07:50 2016
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
-import scikits.audiolab
 from scipy import signal
 
 def preprocess(filename,low_freq=8000,tr=0.15):
