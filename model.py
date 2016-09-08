@@ -35,7 +35,7 @@ class Model():
 
     with tf.name_scope("Cell_fw") as scope:
       #Define one cell, stack the cell to obtain many layers of cell and wrap a DropOut
-      cell_fw = tf.nn.rnn_cell.LSTMCell(hidden_size)
+      cell_fw = tf.nn.rnn_cell.LSTMCell(hidden_size,use_peepholes=True)
 #      cell_fw = tf.nn.rnn_cell.MultiRNNCell([cell_fw] * num_layers)
       cell_fw = tf.nn.rnn_cell.DropoutWrapper(cell_fw,output_keep_prob=self.keep_prob)
       initial_state_fw = cell_fw.zero_state(batch_size, tf.float32)
@@ -67,10 +67,10 @@ class Model():
       self.Vn = tf.reshape(V,(batch_size,seq_len*Nn,K))
       Yn = tf.reshape(self.target_hot,(batch_size,seq_len*Nn,C))
       VVT = tf.batch_matmul(self.Vn,tf.transpose(self.Vn,[0,2,1]))  #V*V^T #in [batch_size, seq_len*Nn,seq_len*Nn]
-      YYT = tf.batch_matmul(Yn,tf.transpose(Yn,[0,2,1]))  #Y*Y^T #in [batch_size, seq_len*Nn,seq_len*Nn]
-      A = tf.sub(VVT,tf.cast(YYT,tf.float32))
+      self.YYT = tf.batch_matmul(Yn,tf.transpose(Yn,[0,2,1]))  #Y*Y^T #in [batch_size, seq_len*Nn,seq_len*Nn]
+      A = tf.sub(VVT,tf.cast(self.YYT,tf.float32))
       #Calculate (d,dw,W) for the Frobenius norm
-      d = tf.reduce_sum(YYT,2,keep_dims=True)  #in [batch_size, seq_len*Nn, 1]
+      d = tf.reduce_sum(self.YYT,2,keep_dims=True)  #in [batch_size, seq_len*Nn, 1]
       dw = tf.div(1.0,tf.sqrt(tf.cast(d,tf.float32)))
       self.W = tf.batch_matmul(dw,tf.transpose(dw,[0,2,1]))  #in [batch_size, seq_len*Nn,seq_len*Nn]
       self.W = tf.stop_gradient(self.W)  #No need to backprop into W, these are constants
@@ -80,7 +80,7 @@ class Model():
     with tf.name_scope("Optimization") as scope:
       global_step = tf.Variable(0, trainable=False)
       lr = tf.train.exponential_decay(lr_rate, global_step,
-                                           10000, 0.9, staircase=True)
+                                           1000, 0.1, staircase=False)
       optimizer = tf.train.AdamOptimizer(lr)
       self.train_op  = optimizer.minimize(self.cost,global_step=global_step)
 

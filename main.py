@@ -31,7 +31,7 @@ config['batch_size'] = batch_size = 8    		# batch_size
 config['num_layers'] = 1			# Number of RNN layers
 config['lr_rate'] = 0.0005
 config['C'] = C = 2
-config['K'] = K = 10     #Embedding dimension
+config['K'] = K = 20     #Embedding dimension
 
 drop_out = 0.8 			# Drop out
 max_iterations=200000		# Number of iterations to train with
@@ -70,6 +70,16 @@ else:
 N = D['X_train'].shape[0]
 Nval = D['X_val'].shape[0]
 
+"""Visualize some data"""
+row = 10
+ind = np.random.choice(D['X_train'].shape[0],row)
+f, axarr = plt.subplots(row, 1)
+for r in range(row):
+  for p in range(Nn):
+    if D['y_train'][ind[r],15,p]>0.0:
+      axarr[r].plot(p,D['X_train'][ind[r],15,p],'ro')
+    else:
+      axarr[r].plot(p,D['X_train'][ind[r],15,p],'bo')
 
 model = Model(config)
 
@@ -83,6 +93,7 @@ step = 0
 print('Start backprop')
 early_stop = False
 ma_low = 10.0
+ma_cost = 0.0
 k=0
 while k < max_iterations and not early_stop:
   epoch = (k*batch_size)/N
@@ -96,7 +107,7 @@ while k < max_iterations and not early_stop:
 
   result = sess.run([model.train_op,model.cost],feed_dict=train_dict)   #perform an update on the parameters
   cost_train = result[1]
-  if k == 0: ma_cost = cost_train
+  if k == 40: ma_cost = cost_train
   ma_cost = 0.95*ma_cost + 0.05*cost_train
 
 
@@ -144,4 +155,11 @@ from sklearn.decomposition import RandomizedPCA
 pca = RandomizedPCA(n_components=2)
 pca.fit(Vn)
 Vn_low = pca.transform(Vn)
+plt.scatter(Vn_low[:,0],Vn_low[:,1],c=response)
+
+"""Do tSNE on embedding space"""
+from sklearn.manifold import TSNE
+tsne_model = TSNE(n_components=2, random_state=0)
+np.set_printoptions(suppress=False)
+Vn_low = tsne_model.fit_transform(Vn)
 plt.scatter(Vn_low[:,0],Vn_low[:,1],c=response)
